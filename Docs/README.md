@@ -5,4 +5,4 @@
 -SQL
 -PowerBI
 -GitHub
-## week 1 :EDA Ingestion and EDA
+## week 1 :Week 1: Data Ingestion and EDA
