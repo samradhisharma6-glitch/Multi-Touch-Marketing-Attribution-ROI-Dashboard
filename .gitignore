@@ -1,3 +1,4 @@
 *.csv
 *.xlxs
 multi_touch_attribution_data.csv
+cleaned multi_touch_attribution_data.csv
