@@ -43,6 +43,8 @@ ADD SpendID INT IDENTITY(1,1) PRIMARY KEY;
 
 ALTER TABLE CRMRevenue
 ADD ConversionID INT IDENTITY(1,1) PRIMARY KEY;
+
+
 --Indexes created
 CREATE INDEX IX_WebAnalytics_UserID
 ON WebAnalytics(UserID);
@@ -80,3 +82,110 @@ Row count queries after import */
 SELECT COUNT(*)as total FROM WebAnalytics;
 SELECT COUNT(*) as tspend FROM AdSpend;
 SELECT COUNT(*) as trevenue FROM CRMRevenue;
+
+/*Tasks# 13 BULD USER JOURNEY SEQUENCE
+
+Sort events by User ID and Timestamp
+Identify sequential touchpoints
+Create user journey paths
+Validate journey order
+Acceptance Criteria
+User journeys generated
+Touchpoints correctly sequenced
+Journey dataset available for attribution analysis*/
+
+
+--Sort Events by User ID and Timestamp
+SELECT
+    UserID,
+    EventTimestamp,
+    Channel,
+    Campaign,
+    Conversion
+FROM WebAnalytics
+ORDER BY UserID, EventTimestamp;
+
+/*Identify Sequential Touchpoints
+Use ROW_NUMBER() to assign the order of touchpoints.*/
+SELECT
+    UserID,
+    EventTimestamp,
+    Channel,
+    Campaign,
+    Conversion,
+    ROW_NUMBER() OVER (
+        PARTITION BY UserID
+        ORDER BY EventTimestamp
+    ) AS Touchpoint_Order
+FROM WebAnalytics;
+
+
+--Create User Journey Dataset
+CREATE VIEW UserJourney AS
+SELECT
+    UserID,
+    EventTimestamp,
+    Channel,
+    Campaign,
+    Conversion,
+    ROW_NUMBER() OVER (
+        PARTITION BY UserID
+        ORDER BY EventTimestamp
+    ) AS Touchpoint_Order
+FROM WebAnalytics
+
+
+
+SELECT TOP 20 *
+FROM UserJourney
+ORDER BY UserID, Touchpoint_Order;
+
+--Validate Journey Order
+SELECT *
+FROM UserJourney
+WHERE UserID = 10120
+ORDER BY Touchpoint_Order;
+
+
+
+--Better Validation Query
+SELECT
+    UserID,
+    COUNT(*) AS TotalTouchpoints
+FROM UserJourney
+GROUP BY UserID
+ORDER BY TotalTouchpoints DESC;
+
+
+--Created Final Journey Path
+SELECT
+    UserID,
+    STRING_AGG(Channel, ' > ')
+        WITHIN GROUP (ORDER BY EventTimestamp) AS JourneyPath
+FROM WebAnalytics
+GROUP BY UserID;
+
+
+
+
+--Save Journey Dataset
+SELECT
+    UserID,
+    EventTimestamp,
+    Channel,
+    Campaign,
+    Conversion,
+    ROW_NUMBER() OVER (
+        PARTITION BY UserID
+        ORDER BY EventTimestamp
+    ) AS Touchpoint_Order
+INTO UserJourneyDataset
+FROM WebAnalytics;
+
+select* from UserJourneyDataset
+
+/*Completed user journey construction by sorting events chronologically for each user and assigning 
+touchpoint order usingSQL Window Functions. Generated journey paths and validated sequence integrity. 
+Created a reusable UserJourney dataset to support attribution modeling in subsequent project phases.
+*/
+
