@@ -189,3 +189,127 @@ touchpoint order usingSQL Window Functions. Generated journey paths and validate
 Created a reusable UserJourney dataset to support attribution modeling in subsequent project phases.
 */
 
+
+/*Assign 100% conversion credit to the first marketing touchpoint in each user journey.
+Identify first touchpoint per user
+Assign conversion credit
+Aggregate channel performance
+Validate attribution results
+Acceptance Criteria
+First-touch attribution model created
+Channel contribution calculated
+Results documented
+*/
+--Identify First Touchpoint Per User
+WITH FirstTouch AS
+(
+    SELECT
+        UserID,
+        Channel,
+        Campaign,
+        Conversion,
+        EventTimestamp,
+        ROW_NUMBER() OVER (
+            PARTITION BY UserID
+            ORDER BY EventTimestamp
+        ) AS Touchpoint_Order
+    FROM WebAnalytics
+)
+
+SELECT *
+FROM FirstTouch
+WHERE Touchpoint_Order = 1;
+
+--Assign Conversion Credit
+WITH FirstTouch AS
+(
+    SELECT
+        UserID,
+        Channel,
+        Campaign,
+        Conversion,
+        ROW_NUMBER() OVER (
+            PARTITION BY UserID
+            ORDER BY EventTimestamp
+        ) AS Touchpoint_Order
+    FROM WebAnalytics
+)
+
+SELECT
+    UserID,
+    Channel,
+    Campaign,
+    1 AS Conversion_Credit
+FROM FirstTouch
+WHERE Touchpoint_Order = 1
+AND Conversion = 'Yes';
+
+--Aggregate Channel Performance
+WITH FirstTouch AS
+(
+    SELECT
+        UserID,
+        Channel,
+        Conversion,
+        ROW_NUMBER() OVER (
+            PARTITION BY UserID
+            ORDER BY EventTimestamp
+        ) AS Touchpoint_Order
+    FROM WebAnalytics
+)
+
+SELECT
+    Channel,
+    COUNT(*) AS FirstTouch_Conversions
+FROM FirstTouch
+WHERE Touchpoint_Order = 1
+AND Conversion = 'Yes'
+GROUP BY Channel
+ORDER BY FirstTouch_Conversions DESC;
+
+--Validate Attribution Results
+
+WITH FirstTouch AS
+(
+    SELECT
+        UserID,
+        Channel,
+        EventTimestamp,
+        ROW_NUMBER() OVER (
+            PARTITION BY UserID
+            ORDER BY EventTimestamp
+        ) AS Touchpoint_Order
+    FROM WebAnalytics
+)
+
+SELECT *
+FROM FirstTouch
+WHERE UserID = 10062;
+
+---Create a Table
+WITH FirstTouch AS
+(
+    SELECT
+        UserID,
+        Channel,
+        Campaign,
+        Conversion,
+        ROW_NUMBER() OVER (
+            PARTITION BY UserID
+            ORDER BY EventTimestamp
+        ) AS Touchpoint_Order
+    FROM WebAnalytics
+)
+
+SELECT
+    UserID,
+    Channel,
+    Campaign,
+    Conversion
+INTO FirstTouchAttribution
+FROM FirstTouch
+WHERE Touchpoint_Order = 1;
+
+select* from FirstTouchAttribution
+/*- Search Ads received the highest first-touch attribution credit, indicating strong performance in customer acquisition.
+- Social Media was the second-largest contributor to new customer journeys.*/

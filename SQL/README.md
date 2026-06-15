@@ -38,7 +38,29 @@ Current Status: Database Setup Completed-DAY1
 
 \* A dedicated UserJourney dataset was created for downstream attribution analysis.
 
-\* Customer journeys vary significantly in length, highlighting the importance of multi-touch attribution rather than relying solely on a single interaction.
+\* Customer journeys vary significantly in length, highlighting the importance of multi-touch attribution rather than relying solely on a single interaction.\\
+
+
+
+\## key insights day 3 # issue 13,14
+
+\## First Touch Attribution Insights
+
+
+
+\* First-touch attribution was implemented by assigning 100% conversion credit to the earliest marketing interaction in each user journey.
+
+\* SQL Window Functions were used to identify the first touchpoint for every user based on chronological event order.
+
+\* Channel-level attribution analysis revealed which marketing channels were most effective at acquiring new users.
+
+\* The model highlights acquisition-focused channels that initiate customer journeys rather than those that close conversions.
+
+\* Attribution results provide a baseline for comparison with Last-Touch and Linear Attribution models.
+
+\* Channel contribution metrics were successfully generated and can be used for marketing performance evaluation.
+
+\* The first-touch attribution dataset is ready for integration into dashboard reporting and ROI analysis.
 
 
 
