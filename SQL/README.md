@@ -64,3 +64,27 @@ Current Status: Database Setup Completed-DAY1
 
 
 
+\## key insight day 4 # issue 15,16
+
+\## Last Touch Attribution Insights
+
+
+
+\* Last-touch attribution assigns 100% conversion credit to the final marketing interaction before conversion.
+
+\* SQL Window Functions were used to identify the most recent touchpoint in each user journey.
+
+\* Channel-level attribution results highlighted the channels most effective at driving conversions.
+
+\* Comparison with First-Touch Attribution revealed differences between acquisition-focused and conversion-focused channels.
+
+\* Some channels generated strong closing performance despite receiving lower first-touch credit.
+
+\* The attribution model provides valuable insight into which channels influence final conversion decisions.
+
+\* Results were validated and prepared for dashboard reporting and marketing performance analysis.
+
+
+
+
+

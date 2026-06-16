@@ -313,3 +313,127 @@ WHERE Touchpoint_Order = 1;
 select* from FirstTouchAttribution
 /*- Search Ads received the highest first-touch attribution credit, indicating strong performance in customer acquisition.
 - Social Media was the second-largest contributor to new customer journeys.*/
+
+
+--Identify last touchpoint per user Assign conversion credit
+--Identify Last Touchpoint Per User
+WITH LastTouch AS
+(
+    SELECT
+        UserID,
+        Channel,
+        Campaign,
+        Conversion,
+        EventTimestamp,
+        ROW_NUMBER() OVER (
+            PARTITION BY UserID
+            ORDER BY EventTimestamp DESC
+        ) AS Touchpoint_Order
+    FROM WebAnalytics
+)
+
+SELECT *
+FROM LastTouch
+WHERE Touchpoint_Order = 1;
+
+
+--Assign Conversion Credit
+WITH LastTouch AS
+(
+    SELECT
+        UserID,
+        Channel,
+        Campaign,
+        Conversion,
+        ROW_NUMBER() OVER (
+            PARTITION BY UserID
+            ORDER BY EventTimestamp DESC
+        ) AS Touchpoint_Order
+    FROM WebAnalytics
+)
+
+SELECT
+    UserID,
+    Channel,
+    Campaign,
+    1 AS Conversion_Credit
+FROM LastTouch
+WHERE Touchpoint_Order = 1
+AND Conversion = 'Yes';
+
+
+--Aggregate Channel Performance
+WITH LastTouch AS
+(
+    SELECT
+        UserID,
+        Channel,
+        Conversion,
+        ROW_NUMBER() OVER (
+            PARTITION BY UserID
+            ORDER BY EventTimestamp DESC
+        ) AS Touchpoint_Order
+    FROM WebAnalytics
+)
+
+SELECT
+    Channel,
+    COUNT(*) AS LastTouch_Conversions
+FROM LastTouch
+WHERE Touchpoint_Order = 1
+AND Conversion = 'Yes'
+GROUP BY Channel
+ORDER BY LastTouch_Conversions DESC;
+
+--Compare with First-Touch Results
+WITH FirstTouch AS
+(
+    SELECT
+        Channel,
+        COUNT(*) AS FirstTouch_Conversions
+    FROM
+    (
+        SELECT
+            UserID,
+            Channel,
+            ROW_NUMBER() OVER(
+                PARTITION BY UserID
+                ORDER BY EventTimestamp
+            ) AS rn
+        FROM WebAnalytics
+    ) t
+    WHERE rn = 1
+    GROUP BY Channel
+),
+
+LastTouch AS
+(
+    SELECT
+        Channel,
+        COUNT(*) AS LastTouch_Conversions
+    FROM
+    (
+        SELECT
+            UserID,
+            Channel,
+            ROW_NUMBER() OVER(
+                PARTITION BY UserID
+                ORDER BY EventTimestamp DESC
+            ) AS rn
+        FROM WebAnalytics
+    ) t
+    WHERE rn = 1
+    GROUP BY Channel
+)
+
+SELECT
+    f.Channel,
+    f.FirstTouch_Conversions,
+    l.LastTouch_Conversions
+FROM FirstTouch f
+JOIN LastTouch l
+    ON f.Channel = l.Channel;
+/*Last-Touch Attribution Insights
+Implemented a Last-Touch Attribution model that assigns 100% conversion credit to the final marketing interaction before conversion.
+Analysis identified the channels most effective at driving conversions and highlighted differences between acquisition-focused and conversion-focused channels.
+Attribution results were validated and prepared for marketing performance reporting and dashboard integration.
