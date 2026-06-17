@@ -436,4 +436,62 @@ JOIN LastTouch l
 /*Last-Touch Attribution Insights
 Implemented a Last-Touch Attribution model that assigns 100% conversion credit to the final marketing interaction before conversion.
 Analysis identified the channels most effective at driving conversions and highlighted differences between acquisition-focused and conversion-focused channels.
-Attribution results were validated and prepared for marketing performance reporting and dashboard integration.
+Attribution results were validated and prepared for marketing performance reporting and dashboard integration.*/
+
+
+/*Distribute conversion credit equally across all touchpoints in the customer journey.*/
+--Count Touchpoints Per User #ISSUE 17
+WITH JourneyData AS
+(
+    SELECT
+        UserID,
+        Channel,
+        COUNT(*) OVER(PARTITION BY UserID) AS TotalTouchpoints
+    FROM WebAnalytics
+)
+
+SELECT *
+FROM JourneyData;
+
+--Calculate Attribution Weight
+SELECT
+    UserID,
+    Channel,
+    COUNT(*) OVER(PARTITION BY UserID) AS TotalTouchpoints,
+    CAST(1.0 / COUNT(*) OVER(PARTITION BY UserID) AS DECIMAL(10,4)) AS AttributionWeight
+FROM WebAnalytics
+ORDER BY UserID;
+
+--Assign Proportional Conversion Credit
+
+WITH LinearAttribution AS
+(
+    SELECT
+        UserID,
+        Channel,
+        1.0 / COUNT(*) OVER(PARTITION BY UserID) AS AttributionCredit
+    FROM WebAnalytics
+)
+
+SELECT *
+FROM LinearAttribution;
+
+
+--Aggregate Channel-Level Attribution
+WITH LinearAttribution AS
+(
+    SELECT
+        UserID,
+        Channel,
+        1.0 / COUNT(*) OVER(PARTITION BY UserID) AS AttributionCredit
+    FROM WebAnalytics
+)
+
+SELECT
+    Channel,
+    ROUND(SUM(AttributionCredit),2) AS Linear_Attributed_Conversions
+FROM LinearAttribution
+GROUP BY Channel
+ORDER BY Linear_Attributed_Conversions DESC;
+/*Implemented a Linear Attribution model that distributes conversion credit equally across all touchpoints in a customer journey.
+Attribution weights were calculated based on the total number of touchpoints per user, ensuring fair credit allocation across channels.*/

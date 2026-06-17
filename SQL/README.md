@@ -88,3 +88,13 @@ Current Status: Database Setup Completed-DAY1
 
 
 
+\##Key Insights DAY 5 # ISSUE 17
+
+\##Distribute conversion credit equally across all touchpoints in the customer journey.
+
+Implemented a Linear Attribution model that distributes conversion credit equally across all touchpoints in a customer journey.
+
+Attribution weights were calculated based on the total number of touchpoints per user, ensuring fair credit allocation across channels.
+
+Channel-level attribution analysis provided a balanced view of marketing contribution and highlighted the collective impact of multiple interactions on conversions.
+
