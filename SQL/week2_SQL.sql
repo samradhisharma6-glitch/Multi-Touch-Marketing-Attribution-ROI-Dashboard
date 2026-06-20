@@ -495,3 +495,47 @@ GROUP BY Channel
 ORDER BY Linear_Attributed_Conversions DESC;
 /*Implemented a Linear Attribution model that distributes conversion credit equally across all touchpoints in a customer journey.
 Attribution weights were calculated based on the total number of touchpoints per user, ensuring fair credit allocation across channels.*/
+
+
+
+
+
+--TASK 3
+--Objective: Calculate total advertising spend across all marketing channels and campaigns.
+
+--Load Ad Spend Dataset
+SELECT TOP 10 *
+FROM AdSpend;
+
+--Sum Campaign Spending
+SELECT
+    SUM(DailySpend) AS TotalMarketingSpend
+FROM AdSpend;
+
+--Aggregate Spend by Channel
+SELECT
+    Channel,
+    SUM(DailySpend) AS ChannelSpend
+FROM AdSpend
+GROUP BY Channel
+ORDER BY ChannelSpend DESC;
+
+--Validate Spend Calculations
+SELECT
+    SUM(DailySpend) AS TotalMarketingSpend
+FROM AdSpend;
+
+SELECT
+    SUM(ChannelSpend) AS TotalChannelSpend
+FROM
+(
+    SELECT
+        Channel,
+        SUM(DailySpend) AS ChannelSpend
+    FROM AdSpend
+    GROUP BY Channel
+) A;
+
+/*Total marketing spend was calculated using the Ad Spend dataset across all campaigns.
+Channel-level analysis identified the highest and lowest spending marketing channels.
+Spend calculations were validated successfully and prepared for KPI reporting.*/
