@@ -98,3 +98,37 @@ Attribution weights were calculated based on the total number of touchpoints per
 
 Channel-level attribution analysis provided a balanced view of marketing contribution and highlighted the collective impact of multiple interactions on conversions.
 
+
+
+&#x20;Issue #19 
+
+Key Insights 
+
+CPC was calculated by dividing total advertising spend by total clicks for each marketing channel and campaign.
+
+Channel-level comparison identified variations in advertising efficiency and cost effectiveness.
+
+Results were validated successfully and provide insight into traffic acquisition costs across channels.
+
+
+
+issue 20
+
+Key Insights 
+
+Customer Acquisition Cost (CAC) was calculated by dividing total marketing spend by the number of converted customers.
+
+The metric provides insight into the average cost required to acquire a customer through marketing activities.
+
+CAC results were validated and prepared for KPI reporting and performance analysis.
+
+
+
+
+
+
+
+
+
+
+

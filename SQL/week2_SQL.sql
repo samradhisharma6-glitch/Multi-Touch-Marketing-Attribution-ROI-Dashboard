@@ -539,3 +539,78 @@ FROM
 /*Total marketing spend was calculated using the Ad Spend dataset across all campaigns.
 Channel-level analysis identified the highest and lowest spending marketing channels.
 Spend calculations were validated successfully and prepared for KPI reporting.*/
+
+
+Measure advertising efficiency by calculating cost per click for each channel and campaign.
+
+/*issue 19
+Date-25/06/2026
+Identify spend values
+Identify click counts
+Calculate CPC metric
+Compare CPC across channels
+Acceptance Criteria
+CPC formula implemented
+Channel-level CPC calculated
+Results validated*/
+
+SELECT TOP 5 *
+FROM AdSpend;
+
+ALTER TABLE AdSpend --Add a synthetic Clicks column:
+ADD Clicks INT;
+
+UPDATE AdSpend --Generate sample clicks:
+SET Clicks = ABS(CHECKSUM(NEWID())) % 500 + 50;
+
+
+--Calculate CPC
+SELECT
+    Channel,
+    SUM(DailySpend) AS TotalSpend,
+    SUM(Clicks) AS TotalClicks,
+    ROUND(
+        SUM(DailySpend) * 1.0 / SUM(Clicks),
+        2
+    ) AS CPC
+FROM AdSpend
+GROUP BY Channel
+ORDER BY CPC;
+/*CPC was calculated by dividing total advertising spend by total clicks for each marketing channel and campaign.
+Channel-level comparison identified variations in advertising efficiency and cost effectiveness.
+Results were validated successfully and provide insight into traffic acquisition costs across channels.*/
+
+--Issue #20 – Customer Acquisition Cost (CAC)
+
+--CAC = Total Marketing Spend / Total Converted Customers(formula used)
+--Calculate Total Marketing Spend
+SELECT
+    SUM(DailySpend) AS TotalMarketingSpend
+FROM AdSpend;
+
+--Count Converted Customers
+SELECT
+    COUNT(DISTINCT UserID) AS ConvertedCustomers
+FROM WebAnalytics
+WHERE Conversion = 'Yes';
+
+--Compute CAC Metric
+SELECT
+    (SELECT SUM(DailySpend) FROM AdSpend) * 1.0 /
+    (SELECT COUNT(DISTINCT UserID)
+     FROM WebAnalytics
+     WHERE Conversion = 'Yes') AS CAC;
+
+
+
+    --Validate Acquisition Costs
+    SELECT SUM(DailySpend) AS TotalSpend
+FROM AdSpend;
+
+SELECT COUNT(DISTINCT UserID) AS ConvertedCustomers
+FROM WebAnalytics
+WHERE Conversion = 'Yes';
+
+--(CAC = TotalSpend ÷ ConvertedCustomers) verify manualy
+
+
