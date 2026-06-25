@@ -613,4 +613,48 @@ WHERE Conversion = 'Yes';
 
 --(CAC = TotalSpend ÷ ConvertedCustomers) verify manualy
 
+/*Tasks 21
+Calculate total revenue
+Calculate total spend
+Compute ROAS metric
+Compare channel performance
+Acceptance Criteria
+ROAS calculated successfully
+Channel-level ROAS generated
+Results documented */
 
+--Calculate Total Revenue
+SELECT
+    SUM(Revenue) AS TotalRevenue
+FROM CRMRevenue;
+
+--Calculate Total Spend
+SELECT
+    SUM(DailySpend) AS TotalSpend
+FROM AdSpend;
+
+--Compute ROAS
+
+SELECT
+    (SELECT SUM(Revenue) FROM CRMRevenue) * 1.0 /
+    (SELECT SUM(DailySpend) FROM AdSpend) AS ROAS;
+
+    --Compare Channel Performance
+    SELECT
+    a.Channel,
+    SUM(c.Revenue) AS Revenue,
+    SUM(a.DailySpend) AS Spend,
+    ROUND(
+        SUM(c.Revenue) * 1.0 /
+        NULLIF(SUM(a.DailySpend),0),
+        2
+    ) AS ROAS
+FROM AdSpend a
+JOIN CRMRevenue c
+    ON a.Channel = c.Channel
+GROUP BY a.Channel
+ORDER BY ROAS DESC;
+/*Key Insights (3 Lines)
+ROAS was calculated by comparing attributed revenue against total advertising spend.
+Channel-level analysis identified the marketing channels generating the highest return on investment.
+Results were validated and provide a clear measure of marketing effectiveness and profitability.*/

@@ -100,9 +100,9 @@ Channel-level attribution analysis provided a balanced view of marketing contrib
 
 
 
-&#x20;Issue #19 
+&#x20;Issue #19
 
-Key Insights 
+Key Insights
 
 CPC was calculated by dividing total advertising spend by total clicks for each marketing channel and campaign.
 
@@ -114,13 +114,27 @@ Results were validated successfully and provide insight into traffic acquisition
 
 issue 20
 
-Key Insights 
+Key Insights
 
 Customer Acquisition Cost (CAC) was calculated by dividing total marketing spend by the number of converted customers.
 
 The metric provides insight into the average cost required to acquire a customer through marketing activities.
 
 CAC results were validated and prepared for KPI reporting and performance analysis.
+
+
+
+issue 21
+
+key insights
+
+ROAS was calculated by comparing attributed revenue against total advertising spend.
+
+Channel-level analysis identified the marketing channels generating the highest return on investment.
+
+Results were validated and provide a clear measure of marketing effectiveness and profitability.
+
+
 
 
 
