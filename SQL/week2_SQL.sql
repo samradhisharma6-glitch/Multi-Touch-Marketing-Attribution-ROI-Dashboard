@@ -658,3 +658,125 @@ ORDER BY ROAS DESC;
 ROAS was calculated by comparing attributed revenue against total advertising spend.
 Channel-level analysis identified the marketing channels generating the highest return on investment.
 Results were validated and provide a clear measure of marketing effectiveness and profitability.*/
+
+
+
+
+
+/*Issue #23 – Create Fact Table, you need to build one central table that combines:
+
+Spend (from AdSpend)
+Revenue (from CRM/Final Attribution)
+Conversion information
+Attribution metrics*/
+
+--Create Fact Table Structure
+ drop table FactMarketingPerformance
+
+
+CREATE TABLE FactMarketingPerformance (
+    FactID INT IDENTITY(1,1) PRIMARY KEY,
+    UserID INT,
+    EventTimestamp DATETIME,
+    Channel VARCHAR(100),
+    Campaign VARCHAR(100),
+    Revenue DECIMAL(18,2),
+    Conversion VARCHAR(10)
+);
+--Load Data
+INSERT INTO FactMarketingPerformance
+(
+    UserID,
+    EventTimestamp,
+    Channel,
+    Campaign,
+    Revenue,
+    Conversion
+)
+SELECT
+    UserID,
+    EventTimestamp,
+    Channel,
+    Campaign,
+    Revenue,
+    Conversion
+FROM CRMRevenue;
+
+---Validate Data Loaded
+SELECT COUNT(*) AS TotalRows
+FROM FactMarketingPerformance;
+
+SELECT COUNT(*) AS CRMRows
+FROM CRMRevenue;
+
+--Validate Revenue
+SELECT SUM(Revenue) AS TotalRevenue
+FROM FactMarketingPerformance;
+--comapred both and we found same value
+
+SELECT SUM(Revenue) AS TotalRevenue
+FROM CRMRevenue;
+
+--Validate Conversions
+SELECT Conversion, COUNT(*) AS CountRows
+FROM FactMarketingPerformance
+GROUP BY Conversion;
+/*Key Insights
+Integrated conversion and revenue data into a centralized fact table.
+Successfully loaded marketing performance metrics for attribution analysis.
+Data validation confirmed row counts and revenue totals were loaded correctly.*/
+
+
+--Create Channel Dimension
+CREATE TABLE DimChannel (
+    ChannelID INT IDENTITY(1,1) PRIMARY KEY,
+    ChannelName VARCHAR(100)
+);
+
+
+--data loaded from web analytics:
+INSERT INTO DimChannel (ChannelName)
+SELECT DISTINCT Channel
+FROM WebAnalytics;
+
+SELECT * FROM DimChannel;
+--Create Campaign Dimension
+CREATE TABLE DimCampaign (
+    CampaignID INT IDENTITY(1,1) PRIMARY KEY,
+    CampaignName VARCHAR(100)
+);
+--data loaded from
+INSERT INTO DimCampaign (CampaignName)
+SELECT DISTINCT Campaign
+FROM WebAnalytics
+
+
+select * from DimCampaign
+
+--Create User Dimension
+
+CREATE TABLE DimUser (
+    UserID INT PRIMARY KEY
+);
+--data loaded from webanalytics
+INSERT INTO DimUser (UserID)
+SELECT DISTINCT UserID
+FROM WebAnalytics;
+
+select* from DimUser
+
+--Create Date Dimension
+CREATE TABLE DimDate (
+    DateID INT IDENTITY(1,1) PRIMARY KEY,
+    FullDate DATE
+);
+
+insert into DimDate(FullDate)
+SELECT DISTINCT CAST(EventTimestamp AS DATE)
+FROM WebAnalytics
+
+select* from DimDate
+/*Created dimension tables for channel, campaign, user, and date analysis.
+Loaded unique values from source datasets and established relationships with the fact table.
+The dimensional model supports Power BI reporting, KPI analysis, and marketing attribution dashboards.*/
+

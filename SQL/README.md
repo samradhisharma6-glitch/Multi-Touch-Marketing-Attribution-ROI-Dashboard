@@ -124,7 +124,7 @@ CAC results were validated and prepared for KPI reporting and performance analys
 
 
 
-issue 21
+issue 21,22
 
 key insights
 
@@ -133,6 +133,64 @@ ROAS was calculated by comparing attributed revenue against total advertising sp
 Channel-level analysis identified the marketing channels generating the highest return on investment.
 
 Results were validated and provide a clear measure of marketing effectiveness and profitability.
+
+
+
+
+
+issue 23
+
+key insights
+
+A star schema was designed to support marketing attribution reporting and Power BI dashboard development.
+
+FactMarketingPerformance serves as the central fact table containing spend, revenue, conversion, and attribution metrics.
+
+Dimension tables for Date, Channel, Campaign, and User provide flexible filtering and aggregation capabilities.
+
+
+
+issue 24
+
+Key Insights 
+
+Created a centralized fact table integrating spend, revenue, conversion, and attribution metrics from marketing datasets.
+
+Successfully loaded attribution data and validated key performance metrics.
+
+The fact table is ready for Power BI reporting and dimensional modeling.
+
+
+
+
+
+issue 24
+
+Key Insights
+
+Integrated conversion and revenue data into a centralized fact table.
+
+Successfully loaded marketing performance metrics for attribution analysis.
+
+Data validation confirmed row counts and revenue totals were loaded correctly.
+
+
+
+issue 25
+
+Key Insights
+
+
+
+Created dimension tables for channel, campaign, user, and date analysis.
+
+Loaded unique values from source datasets and established relationships with the fact table.
+
+The dimensional model supports Power BI reporting, KPI analysis, and marketing attribution dashboards.
+
+
+
+
 
 
 
