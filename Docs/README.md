@@ -34,19 +34,29 @@ Overall Week 2 Status: COMPLETED 🎯
 
 ## Week 3 KPIs \& Data Modelling -
 
-•	Issue #18 Total Spend 
+✔Issue #18 Total Spend
 
-•	Issue #19 CPC 
+✔Issue #19 CPC
 
-•	Issue #20 CAC 
+✔Issue #20 CAC
 
-•	Issue #21 ROAS 
+✔Issue #21 ROAS
 
-•	Issue #22 Star Schema 
+✔Issue #22 Star Schema
 
-•	Issue #23 Fact Table 
+✔Issue #23 Fact Table
 
-•	Issue #24 Dimension Tables 
+✔Issue #24 Dimension Tables
+
+
+
+## Week 4 Dashboard \& visualization
+
+
+
+
+
+
 
 
 
