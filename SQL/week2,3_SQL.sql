@@ -734,6 +734,17 @@ SELECT
     Conversion
 FROM CRMRevenue;
 
+
+select* from FactMarketingPerformance
+
+UPDATE FactMarketingPerformance
+SET Campaign = 'No Campaign'
+WHERE Campaign = '-';
+
+
+
+select* from WebAnalytics
+
 ---Validate Data Loaded
 SELECT COUNT(*) AS TotalRows
 FROM FactMarketingPerformance;
@@ -820,3 +831,235 @@ FROM WebAnalytics;
 Loaded unique values from source datasets and established relationships with the fact table.
 The dimensional model supports Power BI reporting, KPI analysis, and marketing attribution dashboards.*/
 
+
+-- 1. Campaign me jahan '-' hai use 'No Campaign' se update karein
+
+
+
+UPDATE WebAnalytics
+SET Campaign = 'No Campaign'
+WHERE Campaign = '-';
+
+
+SELECT DISTINCT Campaign FROM WebAnalytics;
+
+UPDATE CRMRevenue
+SET Campaign = 'No Campaign'
+WHERE Campaign = '-';
+select * from CRMRevenue
+
+
+-- Agar pehle se bani ho toh clear karne ke liye
+
+WITH OrderedTouchpoints AS (
+    SELECT 
+        w.UserID,
+        w.EventTimestamp,
+        w.Channel,
+        -- '-' ko yahin handle kar rahe hain taaki data clean ho jaye
+        CASE WHEN w.Campaign = '-' THEN 'No Campaign' ELSE w.Campaign END AS Campaign,
+        w.Conversion,
+        COALESCE(c.Revenue, 0) AS Revenue,
+        -- Har user ki journey sequence number (1, 2, 3...)
+        ROW_NUMBER() OVER(PARTITION BY w.UserID ORDER BY w.EventTimestamp ASC) AS TouchpointOrder,
+        -- User ke total touchpoints
+        COUNT(*) OVER(PARTITION BY w.UserID) AS TotalTouchpoints
+    FROM WebAnalytics w
+    LEFT JOIN CRMRevenue c 
+        ON w.UserID = c.UserID AND w.EventTimestamp = c.EventTimestamp
+),
+CalculatedWeights AS (
+    SELECT 
+        UserID,
+        EventTimestamp,
+        Channel,
+        Campaign,
+        Conversion,
+        Revenue,
+        TouchpointOrder,
+        TotalTouchpoints,
+        -- First-Touch Model Rule
+        CASE WHEN TouchpointOrder = 1 THEN 1.0 ELSE 0.0 END AS FirstTouchWeight,
+        -- Last-Touch Model Rule
+        CASE WHEN TouchpointOrder = TotalTouchpoints THEN 1.0 ELSE 0.0 END AS LastTouchWeight,
+        -- Linear Model Rule
+        (1.0 / TotalTouchpoints) AS LinearWeight
+    FROM OrderedTouchpoints
+)
+-- data store in new table
+
+SELECT * INTO FactAttributionWeights FROM CalculatedWeights;
+
+-- Check 
+SELECT TOP 5 * FROM FactAttributionWeights;
+
+
+
+
+
+-- Stage 1: Total Users who visit (Awareness)
+SELECT '1. Total Website Visitors' AS StageName, COUNT(DISTINCT UserID) AS UserCount INTO FactFunnelStages FROM WebAnalytics
+UNION ALL
+-- Stage 2: Users who joinsmultiple times  (Engagement)
+SELECT '2. Engaged Visitors (Multi-click)', COUNT(DISTINCT UserID) 
+FROM (SELECT UserID FROM WebAnalytics GROUP BY UserID HAVING COUNT(UserID) > 1) AS Engaged
+UNION ALL
+-- Stage 3: Users who convert  (Conversion)
+SELECT '3. Converted Customers', COUNT(DISTINCT UserID) FROM WebAnalytics WHERE Conversion = 'Yes';
+
+-- Check 
+SELECT * FROM FactFunnelStages ORDER BY StageName;
+
+
+
+
+CREATE VIEW v_FactAttributionWeights AS
+WITH OrderedTouchpoints AS (
+    SELECT 
+        w.UserID,
+        w.EventTimestamp,
+        w.Channel,
+        CASE WHEN w.Campaign = '-' THEN 'No Campaign' ELSE w.Campaign END AS Campaign,
+        w.Conversion,
+        COALESCE(c.Revenue, 0) AS Revenue,
+        ROW_NUMBER() OVER(PARTITION BY w.UserID ORDER BY w.EventTimestamp ASC) AS TouchpointOrder,
+        COUNT(*) OVER(PARTITION BY w.UserID) AS TotalTouchpoints
+    FROM WebAnalytics w
+    LEFT JOIN CRMRevenue c 
+        ON w.UserID = c.UserID AND w.EventTimestamp = c.EventTimestamp
+),
+CalculatedWeights AS (
+    SELECT 
+        UserID,
+        EventTimestamp,
+        Channel,
+        Campaign,
+        Conversion,
+        Revenue,
+        TouchpointOrder,
+        TotalTouchpoints,
+        CASE WHEN TouchpointOrder = 1 THEN 1.0 ELSE 0.0 END AS FirstTouchWeight,
+        CASE WHEN TouchpointOrder = TotalTouchpoints THEN 1.0 ELSE 0.0 END AS LastTouchWeight,
+        (1.0 / TotalTouchpoints) AS LinearWeight
+    FROM OrderedTouchpoints
+)
+SELECT * FROM CalculatedWeights
+
+
+
+
+
+
+USE MarketingAttributionDB;
+
+SELECT 
+    UserID,
+    EventTimestamp,
+    Channel,
+    Campaign,
+    Conversion,
+    Revenue,
+    TouchpointOrder,
+    TotalTouchpoints,
+    CASE WHEN TouchpointOrder = 1 THEN 1.0 ELSE 0.0 END AS FirstTouchWeight,
+    CASE WHEN TouchpointOrder = TotalTouchpoints THEN 1.0 ELSE 0.0 END AS LastTouchWeight,
+    (1.0 / CAST(TotalTouchpoints AS FLOAT)) AS LinearWeight
+FROM (
+    SELECT 
+        w.UserID,
+        w.EventTimestamp,
+        w.Channel,
+        CASE WHEN w.Campaign = '-' THEN 'No Campaign' ELSE w.Campaign END AS Campaign,
+        w.Conversion,
+        COALESCE(c.Revenue, 0) AS Revenue,
+        ROW_NUMBER() OVER(PARTITION BY w.UserID ORDER BY w.EventTimestamp ASC) AS TouchpointOrder,
+        COUNT(*) OVER(PARTITION BY w.UserID) AS TotalTouchpoints
+    FROM WebAnalytics w
+    LEFT JOIN CRMRevenue c 
+        ON w.UserID = c.UserID AND w.EventTimestamp = c.EventTimestamp
+) AS OrderedTouchpoints;
+
+
+
+USE MarketingAttributionDB;
+
+
+IF OBJECT_ID('dbo.FactAttributionWeights', 'U') IS NOT NULL DROP TABLE dbo.FactAttributionWeights;
+IF OBJECT_ID('dbo.FactFunnelStages', 'U') IS NOT NULL DROP TABLE dbo.FactFunnelStages;
+
+
+SELECT 
+    UserID,
+    EventTimestamp,
+    Channel,
+    CASE WHEN Campaign = '-' THEN 'No Campaign' ELSE Campaign END AS Campaign,
+    Conversion,
+    ROW_NUMBER() OVER(PARTITION BY UserID ORDER BY EventTimestamp ASC) AS TouchpointOrder,
+    COUNT(*) OVER(PARTITION BY UserID) AS TotalTouchpoints
+INTO dbo.FactAttributionWeights
+FROM WebAnalytics;
+
+-- 2. Funnel ki fresh table banana
+SELECT '1. Total Website Visitors' AS StageName, COUNT(DISTINCT UserID) AS UserCount INTO dbo.FactFunnelStages FROM WebAnalytics
+UNION ALL
+SELECT '2. Engaged Visitors (Multi-click)', COUNT(DISTINCT UserID) FROM (SELECT UserID FROM WebAnalytics GROUP BY UserID HAVING COUNT(UserID) > 1) AS Engaged
+UNION ALL
+SELECT '3. Converted Customers', COUNT(DISTINCT UserID) FROM WebAnalytics WHERE Conversion = 'Yes';
+
+
+
+
+USE MarketingAttributionDB;
+
+-- Purani incomplete table ko drop kardiya
+IF OBJECT_ID('dbo.FactAttributionWeights', 'U') IS NOT NULL DROP TABLE dbo.FactAttributionWeights;
+
+-- Saare Revenue aur Weights waale columns ke saath fresh table 
+SELECT 
+    UserID,
+    EventTimestamp,
+    Channel,
+    Campaign,
+    Conversion,
+    Revenue,
+    TouchpointOrder,
+    TotalTouchpoints,
+    CASE WHEN TouchpointOrder = 1 THEN 1.0 ELSE 0.0 END AS FirstTouchWeight,
+    CASE WHEN TouchpointOrder = TotalTouchpoints THEN 1.0 ELSE 0.0 END AS LastTouchWeight,
+    (1.0 / CAST(TotalTouchpoints AS FLOAT)) AS LinearWeight
+INTO dbo.FactAttributionWeights
+FROM (
+    SELECT 
+        w.UserID,
+        w.EventTimestamp,
+        w.Channel,
+        CASE WHEN w.Campaign = '-' THEN 'No Campaign' ELSE w.Campaign END AS Campaign,
+        w.Conversion,
+        COALESCE(c.Revenue, 0) AS Revenue,
+        ROW_NUMBER() OVER(PARTITION BY w.UserID ORDER BY w.EventTimestamp ASC) AS TouchpointOrder,
+        COUNT(*) OVER(PARTITION BY w.UserID) AS TotalTouchpoints
+    FROM WebAnalytics w
+    LEFT JOIN CRMRevenue c 
+        ON w.UserID = c.UserID AND w.EventTimestamp = c.EventTimestamp
+) AS OrderedTouchpoints;
+
+
+
+
+
+-- First checked what's missing
+SELECT DISTINCT Channel FROM WebAnalytics
+WHERE Channel NOT IN (SELECT DISTINCT Channel FROM AdSpend);
+-- Output should show: Direct Traffic, Referral, Display Ads
+
+-- Add placeholder spend for missing channels
+INSERT INTO AdSpend (SpendDate, Channel, Campaign, DailySpend, Clicks)
+SELECT 
+    CAST(EventTimestamp AS DATE) AS SpendDate,
+    Channel,
+    'Organic/Direct' AS Campaign,
+    50.00 AS DailySpend,        -- small placeholder amount
+    ABS(CHECKSUM(NEWID())) % 200 + 20 AS Clicks
+FROM WebAnalytics
+WHERE Channel IN ('Direct Traffic', 'Referral', 'Display Ads')
+GROUP BY CAST(EventTimestamp AS DATE), Channel;

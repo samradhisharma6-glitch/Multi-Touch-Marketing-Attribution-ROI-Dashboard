@@ -56,6 +56,24 @@ Overall Week 2 Status: COMPLETED 🎯
 
 
 
+✔Create KPI Cards (Revenue, Spend, Conversions, CAC, ROAS)
+
+✔Build Revenue by Channel visualization
+
+✔Build Spend by Channel visualization
+
+✔Build Conversion Share by Channel visualization
+
+✔Create First Touch Attribution chart
+
+✔Create Last Touch Attribution chart
+
+✔Create Linear Attribution chart
+
+✔Add slicers and filters
+
+✔Format dashboard for executive presentation
+
 
 
 
